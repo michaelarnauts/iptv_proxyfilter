@@ -1,4 +1,6 @@
 import os
+import re
+
 import requests
 from flask import Flask, make_response, redirect, url_for
 from werkzeug.contrib.cache import SimpleCache
@@ -27,13 +29,29 @@ def filtered_m3u():
 
     channels = parse_channels(raw_data)
 
+    # id filter
+    id_filter = os.getenv('IPTV_PROXYFILTER_ID', None)
+    if id_filter is not None:
+        app.logger.info('Using id filter: %s', id_filter)
+        regex = re.compile(id_filter)
+        channels = [x for x in channels if regex.match(x.tvg_id)]
+
     # name filter
     name_filter = os.getenv('IPTV_PROXYFILTER_NAME', None)
     if name_filter is not None:
-        channels = [x for x in channels if name_filter in x.tvg_name]
+        app.logger.info('Using name filter: %s', name_filter)
+        regex = re.compile(name_filter)
+        channels = [x for x in channels if regex.match(x.tvg_name)]
+
+    # group filter
+    group_filter = os.getenv('IPTV_PROXYFILTER_GROUP', None)
+    if group_filter is not None:
+        app.logger.info('Using group filter: %s', group_filter)
+        regex = re.compile(group_filter)
+        channels = [x for x in channels if regex.match(x.group_title)]
 
     # +1 filter
-    plus1_disable = os.getenv('IPTV_PROXYFILTER_PLUS1_DISABLE', True)
+    plus1_disable = os.getenv('IPTV_PROXYFILTER_PLUS1_DISABLE', False)
     if plus1_disable:
         channels = [x for x in channels if '+1' not in x.tvg_name.replace(' ', '')]
 

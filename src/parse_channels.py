@@ -53,7 +53,7 @@ def parse_channels(data):
                 group_title=attributes.get('group-title', ''),
             ))
         elif line.startswith('#EXTINF:-1'):
-            line = line.split('#EXTINF:-1')[1].split(',')[0]
+            line = line.split('#EXTINF:-1')[1].split('",')[0] + '"'
             attributes = html.fromstring(
                 '<p ' + line + '></p>').attrib  # very tricky hack to allow using lxml to extract attributes :D
     return channels
